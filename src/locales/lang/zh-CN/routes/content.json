@@ -1,6 +1,7 @@
 {
   "content": "内容管理",
   "article": "文章管理",
+  "article_detial": "文章详情",
   "category": "分类管理",
   "tag": "标签管理",
   "resource": "资源管理"

@@ -3,7 +3,7 @@
     v-bind="$attrs"
     @register="registerDrawer"
     showFooter
-    :title="getTitle"
+    title="文章设置"
     width="36%"
     @ok="handleSubmit"
   >
@@ -13,7 +13,7 @@
 <script lang="ts" setup>
   import { ref, computed, unref } from 'vue';
   import { BasicForm, useForm } from '@/components/Form';
-  import { formSchema } from './category.data';
+  import { formSchema } from './data';
   import { BasicDrawer, useDrawerInner } from '@/components/Drawer';
 
   import { getCategoryTree, editCategory, addCategory } from '@/api/content/category';
@@ -51,8 +51,6 @@
       componentProps: { treeData },
     });
   });
-
-  const getTitle = computed(() => (!unref(isUpdate) ? '新增分类' : '编辑分类'));
 
   async function handleSubmit() {
     try {

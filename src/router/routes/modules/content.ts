@@ -21,7 +21,19 @@ const content: AppRouteModule = {
         title: t('routes.content.article'),
         ignoreKeepAlive: false,
       },
-      component: () => import('@/views/demo/system/account/index.vue'),
+      component: () => import('@/views/content/article/index.vue'),
+    },
+    {
+      path: 'article_detial/:id',
+      name: 'ArticleDetail',
+      meta: {
+        hideMenu: true,
+        title: t('routes.content.article_detial'),
+        ignoreKeepAlive: true,
+        showMenu: false,
+        currentActiveMenu: '/content/article',
+      },
+      component: () => import('@/views/content/article/ArticleDetail.vue'),
     },
     {
       path: 'category',
