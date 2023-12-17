@@ -1,10 +1,10 @@
 <template>
-  <PageWrapper title="文章详情" contentBackground @back="goBack">
+  <PageWrapper :title="title" contentBackground @back="goBack">
     <template #extra>
       <a-button preIcon="ant-design:cloud-upload-outlined"> 导入 </a-button>
       <a-button preIcon="ant-design:eye-outlined"> 预览 </a-button>
-      <a-button preIcon="ant-design:save-outlined"> 保存 </a-button>
-      <a-button preIcon="ant-design:setting-outlined" @click="handleEdit"> 设置 </a-button>
+      <a-button preIcon="ant-design:save-outlined" @click="handleSave"> 保存 </a-button>
+      <a-button preIcon="ant-design:setting-outlined" @click="handleSetting"> 设置 </a-button>
       <a-button type="primary">
         <SendOutlined class="send-icon" />
         发布
@@ -15,7 +15,7 @@
       v-model:value="valueRef"
       @change="handleChange"
       ref="markDownRef"
-      placeholder="这是占位文本"
+      placeholder="请输入文章内容"
     />
     <ArticleDrawer @register="registerDrawer" @success="handleSuccess" />
   </PageWrapper>
@@ -34,55 +34,61 @@
   import { useDrawer } from '@/components/Drawer';
   import ArticleDrawer from './ArticleDrawer.vue';
 
+  import { saveArticle } from '@/api/content/article';
+
+  import { message } from 'ant-design-vue';
+
   const [registerDrawer, { openDrawer }] = useDrawer();
 
   defineOptions({ name: 'ArticleDetail' });
 
   const height = window.innerHeight * 0.74;
 
+  const title = '1212';
+
   const markDownRef = ref<Nullable<MarkDownActionType>>(null);
   const valueRef = ref(`
-# 标题h1
+  # 标题h1
 
-##### 标题h5
+  ##### 标题h5
 
-**加粗**
-*斜体*
-~~删除线~~
-[链接](https://github.com/vbenjs/vue-vben-admin)
-↓分割线↓
+  **加粗**
+  *斜体*
+  ~~删除线~~
+  [链接](https://github.com/vbenjs/vue-vben-admin)
+  ↓分割线↓
 
----
+  ---
 
 
-* 无序列表1
-  * 无序列表1.1
+  * 无序列表1
+    * 无序列表1.1
 
-1. 有序列表1
-2. 有序列表2
+  1. 有序列表1
+  2. 有序列表2
 
-* [ ] 任务列表1
-* [x] 任务列表2
+  * [ ] 任务列表1
+  * [x] 任务列表2
 
-> 引用示例
+  > 引用示例
 
-\`\`\`js
-// 代码块:
-(() => {
-  var htmlRoot = document.getElementById('htmlRoot');
-  var theme = window.localStorage.getItem('__APP__DARK__MODE__');
-  if (htmlRoot && theme) {
-    htmlRoot.setAttribute('data-theme', theme);
-    theme = htmlRoot = null;
-  }
-})();
-\`\`\`
+  \`\`\`js
+  // 代码块:
+  (() => {
+    var htmlRoot = document.getElementById('htmlRoot');
+    var theme = window.localStorage.getItem('__APP__DARK__MODE__');
+    if (htmlRoot && theme) {
+      htmlRoot.setAttribute('data-theme', theme);
+      theme = htmlRoot = null;
+    }
+  })();
+  \`\`\`
 
-| 表格 | 示例 | 🎉️ |
-| --- | --- | --- |
-| 1 | 2 | 3 |
-| 4 | 5 | 6 |
-`);
+  | 表格 | 示例 | 🎉️ |
+  | --- | --- | --- |
+  | 1 | 2 | 3 |
+  | 4 | 5 | 6 |
+  `);
 
   function handleChange(v: string) {
     valueRef.value = v;
@@ -96,11 +102,22 @@
     go('/content/article');
   }
 
-  function handleEdit(record: Recordable) {
+  function handleSetting(record: Recordable) {
     openDrawer(true, {
       record,
       isUpdate: true,
     });
+  }
+
+  async function handleSave() {
+    await saveArticle({
+      articleContent: valueRef.value,
+      name: '',
+      tag: undefined,
+      category: undefined,
+      visibility: '',
+    });
+    message.success('保存成功');
   }
 </script>
 
