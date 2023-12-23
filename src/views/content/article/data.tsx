@@ -1,29 +1,35 @@
 import { FormSchema } from '@/components/Form';
-import { treeOptionsListApi } from '@/api/demo/tree';
 
-export const searchList = (() => {
-  const result: any[] = [];
-  for (let i = 0; i < 6; i++) {
-    result.push({
-      id: i,
-      title: 'Vben Admin',
-      description: ['Vben', '设计语言', 'Typescript', 'Typescript', 'Typescript'],
-      content: '基于Vue Next, TypeScript, Ant Design实现的一套完整的企业级后台管理系统。',
-      // time: '2020-11-14 11:20',
-    });
-  }
-  return result;
-})();
+import { getArticlePage } from '@/api/content/article';
 
-export const actions: any[] = [
-  { icon: 'ant-design:eye-outlined', text: '156', color: '#018ffb' },
-  { icon: 'bx:bxs-like', text: '156', color: '#459ae8' },
-  { icon: 'bx:bxs-message-dots', text: '2', color: '#42d27d' },
-];
+import { getCategoryTree } from '@/api/content/category';
+import { getTagList } from '@/api/content/tag';
+import { uploadApi } from '@/api/sys/upload';
+import { ref } from 'vue';
+
+export const articleData = ref({});
+
+export const paginationProp = ref({
+  showSizeChanger: false,
+  showQuickJumper: true,
+  pageSize: 10,
+  current: 1,
+  total: 100,
+  showTotal: (total: number) => `总 ${total} 条`,
+  // onChange: pageChange,
+  // onShowSizeChange: pageSizeChange,
+});
+
+export function getPageList(data?: any) {
+  getArticlePage(data).then((resp) => {
+    articleData.value = resp;
+    paginationProp.value.total = resp.total;
+  });
+}
 
 export const schemas: FormSchema[] = [
   {
-    field: 'field1',
+    field: 'title',
     component: 'InputSearch',
     label: '文章名',
     colProps: {
@@ -31,7 +37,9 @@ export const schemas: FormSchema[] = [
     },
     componentProps: {
       onSearch: (e: any) => {
-        alert(e);
+        getPageList({
+          title: e,
+        });
       },
     },
   },
@@ -41,47 +49,65 @@ export const schemas: FormSchema[] = [
     component: 'Select',
     componentProps: {
       options: [
-        { label: '启用', value: '1' },
-        { label: '停用', value: '0' },
+        { label: '已发布', value: '1' },
+        { label: '草稿', value: '0' },
       ],
       onChange: (e: any) => {
-        alert(e);
+        getPageList({
+          status: e,
+        });
       },
     },
     colProps: { span: 4 },
   },
   {
-    field: 'status',
+    field: 'sortId',
     label: '分类',
-    component: 'Select',
+    component: 'ApiSelect',
     componentProps: {
-      options: [
-        { label: '启用', value: '1' },
-        { label: '停用', value: '0' },
-      ],
+      api: getCategoryTree,
+      resultField: 'data',
+      optionFilterProp: 'label',
+      labelField: 'name',
+      valueField: 'id',
+      onChange: (e: any) => {
+        getPageList({
+          sortId: e,
+        });
+      },
     },
     colProps: { span: 4 },
   },
   {
-    field: 'status',
+    field: 'tagIds',
     label: '标签',
-    component: 'Select',
+    component: 'ApiSelect',
     componentProps: {
-      options: [
-        { label: '启用', value: '1' },
-        { label: '停用', value: '0' },
-      ],
+      api: getTagList,
+      resultField: 'records',
+      optionFilterProp: 'label',
+      labelField: 'name',
+      valueField: 'id',
+      mode: 'tags',
+      immediate: true,
+      onChange: (e: any) => {
+        getPageList({
+          tagIds: e,
+        });
+      },
     },
     colProps: { span: 5 },
   },
   {
-    field: 'createTime',
+    field: 'createTimes',
     label: '创建时间',
     component: 'RangePicker',
     colProps: { span: 6 },
     componentProps: {
       onChange: (e: any) => {
-        alert(e);
+        getPageList({
+          createTimes: e,
+        });
       },
     },
   },
@@ -116,8 +142,11 @@ export const formSchema: FormSchema[] = [
     helpMessage: ['ApiTreeSelect组件', '使用接口提供的数据生成选项'],
     required: true,
     componentProps: {
-      // api: treeOptionsListApi,
-      resultField: 'list',
+      api: getCategoryTree,
+      resultField: 'data',
+      optionFilterProp: 'label',
+      labelField: 'name',
+      valueField: 'id',
       onChange: (e, v) => {
         console.log('ApiTreeSelect====>:', e, v);
       },
@@ -127,9 +156,21 @@ export const formSchema: FormSchema[] = [
     },
   },
   {
-    field: 'tag',
+    field: 'tagIds',
     label: '标签',
-    component: 'Select',
+    component: 'ApiSelect',
+    componentProps: {
+      api: getTagList,
+      resultField: 'records',
+      optionFilterProp: 'label',
+      labelField: 'name',
+      valueField: 'id',
+      mode: 'tags',
+      immediate: true,
+      onChange: (e, v) => {
+        console.log('ApiTreeSelect====>:', e, v);
+      },
+    },
     colProps: {
       span: 12,
     },
@@ -163,10 +204,8 @@ export const formSchema: FormSchema[] = [
     field: 'img',
     component: 'ImageUpload',
     label: '封面图',
-    required: true,
-    defaultValue: ['https://zos.alipayobjects.com/rmsportal/jkjgkEfvpUPVyRjUImniVslZfWPnJuuZ.png'],
     componentProps: {
-      // api: uploadApi,
+      api: uploadApi,
       accept: ['png', 'jpeg', 'jpg'],
       maxSize: 2,
       maxNumber: 3,

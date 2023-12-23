@@ -1,10 +1,16 @@
 <template>
-  <PageWrapper :title="title" contentBackground @back="goBack">
+  <PageWrapper :title="articleData.title" contentBackground @back="goBack">
     <template #extra>
       <a-button preIcon="ant-design:cloud-upload-outlined"> 导入 </a-button>
       <a-button preIcon="ant-design:eye-outlined"> 预览 </a-button>
       <a-button preIcon="ant-design:save-outlined" @click="handleSave"> 保存 </a-button>
-      <a-button preIcon="ant-design:setting-outlined" @click="handleSetting"> 设置 </a-button>
+      <a-button
+        preIcon="ant-design:setting-outlined"
+        @click="handleSetting(articleData)"
+        :hidden="settingHidden"
+      >
+        设置
+      </a-button>
       <a-button type="primary">
         <SendOutlined class="send-icon" />
         发布
@@ -12,7 +18,7 @@
     </template>
     <MarkDown
       :height="height"
-      v-model:value="valueRef"
+      v-model:value="articleData.content.articleContent"
       @change="handleChange"
       ref="markDownRef"
       placeholder="请输入文章内容"
@@ -22,7 +28,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, unref, computed } from 'vue';
   import { PageWrapper } from '@/components/Page';
   import { useGo } from '@/hooks/web/usePage';
 
@@ -34,9 +40,11 @@
   import { useDrawer } from '@/components/Drawer';
   import ArticleDrawer from './ArticleDrawer.vue';
 
-  import { saveArticle } from '@/api/content/article';
+  import { saveArticle, getArticleDetail } from '@/api/content/article';
 
   import { message } from 'ant-design-vue';
+
+  import { useRouter } from 'vue-router';
 
   const [registerDrawer, { openDrawer }] = useDrawer();
 
@@ -44,54 +52,57 @@
 
   const height = window.innerHeight * 0.74;
 
-  const title = '1212';
+  const articleData = ref({
+    id: '',
+    title: '文章详情',
+    img: '',
+    imgType: '',
+    remark: '',
+    user: {},
+    category: {},
+    content: {
+      articleContent: '',
+    },
+    tagList: [],
+    status: '',
+    visibility: '',
+    browse: 0,
+    comments: 0,
+    likes: 0,
+    stars: 0,
+    createBy: '',
+    createTime: '',
+    updateBy: '',
+    updateTime: '',
+  });
 
   const markDownRef = ref<Nullable<MarkDownActionType>>(null);
-  const valueRef = ref(`
-  # 标题h1
+  const articleContent = ref('');
 
-  ##### 标题h5
+  const { currentRoute, replace } = useRouter();
 
-  **加粗**
-  *斜体*
-  ~~删除线~~
-  [链接](https://github.com/vbenjs/vue-vben-admin)
-  ↓分割线↓
+  // 根据articleId参数控制设置按钮的显示
+  const param = computed(() => unref(currentRoute).params);
+  const settingHidden = ref(true);
+  if (param.value.id === 'undefined') {
+    settingHidden.value = true;
+  } else {
+    // 显示设置按钮
+    settingHidden.value = false;
+    // 查询文章内容
+    getArticleInfo();
+  }
 
-  ---
-
-
-  * 无序列表1
-    * 无序列表1.1
-
-  1. 有序列表1
-  2. 有序列表2
-
-  * [ ] 任务列表1
-  * [x] 任务列表2
-
-  > 引用示例
-
-  \`\`\`js
-  // 代码块:
-  (() => {
-    var htmlRoot = document.getElementById('htmlRoot');
-    var theme = window.localStorage.getItem('__APP__DARK__MODE__');
-    if (htmlRoot && theme) {
-      htmlRoot.setAttribute('data-theme', theme);
-      theme = htmlRoot = null;
-    }
-  })();
-  \`\`\`
-
-  | 表格 | 示例 | 🎉️ |
-  | --- | --- | --- |
-  | 1 | 2 | 3 |
-  | 4 | 5 | 6 |
-  `);
+  function getArticleInfo() {
+    getArticleDetail({
+      id: param.value.id,
+    }).then((resp) => {
+      articleData.value = resp;
+    });
+  }
 
   function handleChange(v: string) {
-    valueRef.value = v;
+    articleContent.value = v;
   }
 
   const go = useGo();
@@ -102,22 +113,30 @@
     go('/content/article');
   }
 
-  function handleSetting(record: Recordable) {
+  function handleSetting(articleData: any) {
     openDrawer(true, {
-      record,
-      isUpdate: true,
+      articleData,
+      articleId: param.value.id,
     });
   }
 
   async function handleSave() {
-    await saveArticle({
-      articleContent: valueRef.value,
+    let articleId = await saveArticle({
+      id: param.value.id,
+      articleContent: articleData.value.content.articleContent,
       name: '',
       tag: undefined,
       category: undefined,
       visibility: '',
     });
     message.success('保存成功');
+
+    const { name } = unref(currentRoute);
+    replace({ name: name!, params: { id: unref(articleId) } });
+  }
+
+  async function handleSuccess() {
+    getArticleInfo();
   }
 </script>
 

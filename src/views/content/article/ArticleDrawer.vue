@@ -15,8 +15,7 @@
   import { BasicForm, useForm } from '@/components/Form';
   import { formSchema } from './data';
   import { BasicDrawer, useDrawerInner } from '@/components/Drawer';
-
-  import { getCategoryTree, editCategory, addCategory } from '@/api/content/category';
+  import { editArticle } from '@/api/content/article';
 
   import { message } from 'ant-design-vue';
 
@@ -24,10 +23,9 @@
 
   const emit = defineEmits(['success', 'register']);
 
-  const isUpdate = ref(true);
-  const rowId = ref('');
+  const articleId = ref('');
 
-  const [registerForm, { resetFields, setFieldsValue, updateSchema, validate }] = useForm({
+  const [registerForm, { resetFields, setFieldsValue, validate }] = useForm({
     labelWidth: 100,
     schemas: formSchema,
     showActionButtonGroup: false,
@@ -37,18 +35,14 @@
   const [registerDrawer, { setDrawerProps, closeDrawer }] = useDrawerInner(async (data) => {
     resetFields();
     setDrawerProps({ confirmLoading: false });
-    isUpdate.value = !!data?.isUpdate;
+    articleId.value = data.articleId;
 
-    if (unref(isUpdate)) {
-      rowId.value = data.record.id;
-      setFieldsValue({
-        ...data.record,
-      });
-    }
-    const treeData = await getCategoryTree();
-    updateSchema({
-      field: 'parentId',
-      componentProps: { treeData },
+    data.articleData.sortId = data.articleData.category ? data.articleData.category.id : '';
+    data.articleData.tagIds = data.articleData.tagList
+      ? data.articleData.tagList.map((item) => item.id)
+      : [];
+    setFieldsValue({
+      ...data.articleData,
     });
   });
 
@@ -56,15 +50,9 @@
     try {
       const values = await validate();
       setDrawerProps({ confirmLoading: true });
-      // TODO custom api
-      if (unref(isUpdate)) {
-        values.id = unref(rowId);
-        await editCategory(values);
-        message.success('修改成功');
-      } else {
-        await addCategory(values);
-        message.success('新增成功');
-      }
+      values.id = unref(articleId);
+      await editArticle(values);
+      message.success('修改成功');
       closeDrawer();
       emit('success');
     } finally {

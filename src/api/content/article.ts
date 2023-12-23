@@ -7,10 +7,18 @@ import {
 import { defHttp } from '@/utils/http/axios';
 
 enum Api {
-  ArticleList = '/article/list',
+  ArticlePage = '/article/page',
   ArticleSave = '/article/save',
   ArticlePublic = '/article/public',
+  ArticleDetail = '/article/detail',
+  ArticleEdit = '/article/edit',
 }
 
 export const saveArticle = (data: ArticleAddParams) =>
-  defHttp.post<ArticleAddParams>({ url: Api.ArticleSave, data });
+  defHttp.post<ArticleListItem>({ url: Api.ArticleSave, data });
+export const getArticlePage = (data: ArticleListItem) =>
+  defHttp.post<ArticleListItem>({ url: Api.ArticlePage, data });
+export const getArticleDetail = (data: ArticleListItem) =>
+  defHttp.post<ArticleListItem>({ url: Api.ArticleDetail, data });
+export const editArticle = (data: ArticleAddParams) =>
+  defHttp.post<ArticleListItem>({ url: Api.ArticleEdit, data });

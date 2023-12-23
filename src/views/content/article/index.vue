@@ -14,38 +14,47 @@
 
     <div :class="`${prefixCls}__container`">
       <List :pagination="paginationProp">
-        <template v-for="item in searchList" :key="item.id">
+        <template v-for="item in articleData.records" :key="item.id">
           <List.Item>
             <List.Item.Meta>
               <template #description>
                 <div :class="`${prefixCls}__content`">
-                  <span>分类: Bug记录</span>
-                  <span>可见性: 公开</span>
-                  <span>状态: 已发布</span>
+                  <span>分类: {{ item.category.name }}</span>
+                  <span>可见性: {{ item.visibility == 1 ? '可见' : '隐藏' }}</span>
+                  <span>状态: {{ item.visibility == 1 ? '已发布' : '草稿' }}</span>
                 </div>
                 <div :class="`${prefixCls}__action`">
-                  <template v-for="action in actions" :key="action.icon">
-                    <div :class="`${prefixCls}__action-item`">
-                      <Icon
-                        v-if="action.icon"
-                        :class="`${prefixCls}__action-icon`"
-                        :icon="action.icon"
-                        :color="action.color"
-                      />
-                      {{ action.text }}
-                    </div>
-                  </template>
+                  <div :class="`${prefixCls}__action-item`">
+                    <Icon
+                      :class="`${prefixCls}__action-icon`"
+                      icon="ant-design:eye-outlined"
+                      color="#018ffb"
+                    />
+                    {{ item.browse }}
+                  </div>
+                  <div :class="`${prefixCls}__action-item`">
+                    <Icon :class="`${prefixCls}__action-icon`" icon="bx:bxs-like" color="#459ae8" />
+                    {{ item.likes }}
+                  </div>
+                  <div :class="`${prefixCls}__action-item`">
+                    <Icon
+                      :class="`${prefixCls}__action-icon`"
+                      icon="bx:bxs-message-dots"
+                      color="#42d27d"
+                    />
+                    {{ item.comments }}
+                  </div>
                   <span :class="`${prefixCls}__time`">{{ item.time }}</span>
                 </div>
               </template>
               <template #title>
-                <a :class="`${prefixCls}__title`" @click="handleView">
+                <a :class="`${prefixCls}__title`" @click="handleView(item.id)">
                   {{ item.title }}
                 </a>
                 <div>
-                  <template v-for="tag in item.description" :key="tag">
+                  <template v-for="tag in item.tagList" :key="tag.id">
                     <Tag class="mb-2">
-                      {{ tag }}
+                      {{ tag.name }}
                     </Tag>
                   </template>
                   <div class="more">
@@ -55,12 +64,12 @@
                         src="https://www.hellocode.top/images/qq.jpg"
                         title="sss"
                       />
-                      2023年12月16日
+                      {{ item.createTime }}
                     </div>
                     <a-dropdown :trigger="['click']" placement="bottom" arrow>
                       <template #overlay>
                         <a-menu @click="handleMenuClick" class="drop-menu">
-                          <a-menu-item class="drop-menu-item" key="1" @click="handleView"
+                          <a-menu-item class="drop-menu-item" key="1" @click="handleView(item.id)"
                             ><FormOutlined class="icon" />编辑</a-menu-item
                           >
                           <a-menu-item class="drop-menu-item" key="2" @click="handleEdit"
@@ -99,9 +108,10 @@
   } from '@ant-design/icons-vue';
   import Icon from '@/components/Icon/Icon.vue';
   import { BasicForm } from '@/components/Form';
-  import { actions, searchList, schemas } from './data';
+
+  import { schemas, getPageList, articleData, paginationProp } from './data';
   import { PageWrapper } from '@/components/Page';
-  import { h, ref } from 'vue';
+  import { h } from 'vue';
   import { useGo } from '@/hooks/web/usePage';
   // import type { MenuProps } from 'ant-design-vue';
 
@@ -116,21 +126,22 @@
     console.log('click', e);
   };
 
+  const searchParam = {
+    page: 1,
+    pageSize: 10,
+    title: '',
+    status: '',
+    sortId: '',
+    tagIds: [],
+    createTimes: [],
+  };
+
   const prefixCls = 'list-search';
 
-  const paginationProp = ref({
-    showSizeChanger: false,
-    showQuickJumper: true,
-    pageSize: 10,
-    current: 1,
-    total: 100,
-    showTotal: (total: number) => `总 ${total} 条`,
-    // onChange: pageChange,
-    // onShowSizeChange: pageSizeChange,
-  });
+  getPageList(searchParam);
 
-  function handleView(record: Recordable) {
-    go('/content/article_detial/' + record.id);
+  function handleView(id: any) {
+    go('/content/article_detial/' + id);
   }
 
   function handleEdit(record: Recordable) {
