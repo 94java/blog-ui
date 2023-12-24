@@ -19,9 +19,11 @@
             <List.Item.Meta>
               <template #description>
                 <div :class="`${prefixCls}__content`">
-                  <span>分类: {{ item.category.name }}</span>
-                  <span>可见性: {{ item.visibility == 1 ? '可见' : '隐藏' }}</span>
-                  <span>状态: {{ item.visibility == 1 ? '已发布' : '草稿' }}</span>
+                  <span
+                    >分类: {{ item.category.name == undefined ? '无' : item.category.name }}</span
+                  >
+                  <span>可见性: {{ item.visibility === '1' ? '可见' : '隐藏' }}</span>
+                  <span>状态: {{ item.status === '1' ? '已发布' : '草稿' }}</span>
                 </div>
                 <div :class="`${prefixCls}__action`">
                   <div :class="`${prefixCls}__action-item`">
@@ -72,7 +74,7 @@
                           <a-menu-item class="drop-menu-item" key="1" @click="handleView(item.id)"
                             ><FormOutlined class="icon" />编辑</a-menu-item
                           >
-                          <a-menu-item class="drop-menu-item" key="2" @click="handleEdit"
+                          <a-menu-item class="drop-menu-item" key="2" @click="handleEdit(item)"
                             ><SettingOutlined class="icon" />设置</a-menu-item
                           >
                           <a-menu-item class="drop-menu-item" key="3"
@@ -126,19 +128,9 @@
     console.log('click', e);
   };
 
-  const searchParam = {
-    page: 1,
-    pageSize: 10,
-    title: '',
-    status: '',
-    sortId: '',
-    tagIds: [],
-    createTimes: [],
-  };
-
   const prefixCls = 'list-search';
 
-  getPageList(searchParam);
+  getPageList(paginationProp);
 
   function handleView(id: any) {
     go('/content/article_detial/' + id);
@@ -146,13 +138,13 @@
 
   function handleEdit(record: Recordable) {
     openDrawer(true, {
-      record,
-      isUpdate: true,
+      articleData: record,
+      articleId: record.id,
     });
   }
 
   function handleSuccess() {
-    reload();
+    getPageList(paginationProp);
   }
 </script>
 <style lang="less" scoped>

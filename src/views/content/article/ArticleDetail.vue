@@ -3,7 +3,7 @@
     <template #extra>
       <a-button preIcon="ant-design:cloud-upload-outlined"> 导入 </a-button>
       <a-button preIcon="ant-design:eye-outlined"> 预览 </a-button>
-      <a-button preIcon="ant-design:save-outlined" @click="handleSave"> 保存 </a-button>
+      <a-button preIcon="ant-design:save-outlined" @click="handleSave(false)"> 保存 </a-button>
       <a-button
         preIcon="ant-design:setting-outlined"
         @click="handleSetting(articleData)"
@@ -11,7 +11,7 @@
       >
         设置
       </a-button>
-      <a-button type="primary">
+      <a-button type="primary" @click="handlePublish">
         <SendOutlined class="send-icon" />
         发布
       </a-button>
@@ -40,15 +40,18 @@
   import { useDrawer } from '@/components/Drawer';
   import ArticleDrawer from './ArticleDrawer.vue';
 
-  import { saveArticle, getArticleDetail } from '@/api/content/article';
+  import { saveArticle, getArticleDetail, publishArticle } from '@/api/content/article';
 
   import { message } from 'ant-design-vue';
 
   import { useRouter } from 'vue-router';
+  import { useTabs } from '@/hooks/web/useTabs';
 
   const [registerDrawer, { openDrawer }] = useDrawer();
 
   defineOptions({ name: 'ArticleDetail' });
+
+  const { setTitle } = useTabs();
 
   const height = window.innerHeight * 0.74;
 
@@ -93,12 +96,13 @@
     getArticleInfo();
   }
 
-  function getArticleInfo() {
-    getArticleDetail({
+  async function getArticleInfo() {
+    let resp = await getArticleDetail({
       id: param.value.id,
-    }).then((resp) => {
-      articleData.value = resp;
     });
+    articleData.value = resp;
+    // 设置tab标题
+    setTitle(resp.title);
   }
 
   function handleChange(v: string) {
@@ -120,7 +124,7 @@
     });
   }
 
-  async function handleSave() {
+  async function handleSave(flag) {
     let articleId = await saveArticle({
       id: param.value.id,
       articleContent: articleData.value.content.articleContent,
@@ -129,10 +133,23 @@
       category: undefined,
       visibility: '',
     });
-    message.success('保存成功');
+    if (!flag) {
+      message.success('保存成功');
+    }
 
     const { name } = unref(currentRoute);
     replace({ name: name!, params: { id: unref(articleId) } });
+  }
+
+  async function handlePublish() {
+    // 先调用一下保存
+    handleSave(true);
+    // 发布文章
+    await publishArticle({
+      id: param.value.id,
+    });
+    message.success('发布成功');
+    go('/content/article');
   }
 
   async function handleSuccess() {

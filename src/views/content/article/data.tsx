@@ -10,15 +10,25 @@ import { ref } from 'vue';
 export const articleData = ref({});
 
 export const paginationProp = ref({
-  showSizeChanger: false,
-  showQuickJumper: true,
-  pageSize: 10,
-  current: 1,
+  showSizeChanger: true,
+  pageSizeOptions: ['5', '10', '20', '50', '100'],
+  pageSize: 5,
+  pageNum: 1,
   total: 100,
   showTotal: (total: number) => `总 ${total} 条`,
-  // onChange: pageChange,
-  // onShowSizeChange: pageSizeChange,
+  onChange: pageChange,
+  onShowSizeChange: pageSizeChange,
 });
+
+function pageChange(p: number, pz: number) {
+  paginationProp.value.pageNum = p;
+  paginationProp.value.pageSize = pz;
+  getPageList(paginationProp.value);
+}
+function pageSizeChange(_current, size: number) {
+  paginationProp.value.pageSize = size;
+  getPageList(paginationProp.value);
+}
 
 export function getPageList(data?: any) {
   getArticlePage(data).then((resp) => {
